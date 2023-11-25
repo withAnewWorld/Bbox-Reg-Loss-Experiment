@@ -10,14 +10,23 @@ if __name__ == "__main__":
     jpeg_dir = os.path.join(os.getcwd(), "data", "VOCdevkit", "VOC2007", "JPEGImages")
 
     dst_root_dir = "./data/bbox_regression/"
+    fine_tune_root_dir = "./data/fine_tune"
+
     dst_jpeg_dir = os.path.join(dst_root_dir, "JPEGImages")
     dst_bndbox_dir = os.path.join(dst_root_dir, "bndboxs")
     dst_positive_dir = os.path.join(dst_root_dir, "positive")
+
+    fine_tune_annotation_dir = os.path.join(fine_tune_root_dir, "Annotations")
+    fine_tune_jpeg_dir = os.path.join(fine_tune_root_dir, "JPEGImages")
 
     os.makedirs(dst_root_dir, exist_ok=True)
     os.makedirs(dst_jpeg_dir, exist_ok=True)
     os.makedirs(dst_bndbox_dir, exist_ok=True)
     os.makedirs(dst_positive_dir, exist_ok=True)
+
+    os.makedirs(fine_tune_root_dir, exist_ok=True)
+    os.makedirs(fine_tune_annotation_dir, exist_ok=True)
+    os.makedirs(fine_tune_jpeg_dir, exist_ok=True)
 
     gt_annotation_dir = os.path.join(
         os.getcwd(), "data", "VOCdevkit", "VOC2007", "Annotations"
@@ -30,7 +39,13 @@ if __name__ == "__main__":
     total_positive_num = 0
     for sample_name in file_names:
         jpeg_path = os.path.join(jpeg_dir, sample_name + ".jpg")
-
+        fine_tune_annotation_positive_path = os.path.join(
+            fine_tune_annotation_dir, sample_name + "_1" + ".csv"
+        )
+        fine_tune_annotation_negative_path = os.path.join(
+            fine_tune_annotation_dir, sample_name + "_0" + ".csv"
+        )
+        fine_tune_jpeg_path = os.path.join(fine_tune_jpeg_dir, sample_name + ".jpg")
         gt_annotation_path = os.path.join(gt_annotation_dir, sample_name + ".xml")
 
         bndboxs = utils.parse_xml(gt_annotation_path)
@@ -42,6 +57,21 @@ if __name__ == "__main__":
             gt_annotation_path, jpeg_path, gs
         )
         positive_bndboxes = np.array(positive_bndboxes)
+
+        shutil.copyfile(jpeg_path, fine_tune_jpeg_path)
+        # 保存正负样本标注
+        np.savetxt(
+            fine_tune_annotation_positive_path,
+            np.array(positive_bndboxes),
+            fmt="%d",
+            delimiter=" ",
+        )
+        np.savetxt(
+            fine_tune_annotation_negative_path,
+            np.array(negative_bncboxes),
+            fmt="%d",
+            delimiter=" ",
+        )
 
         if len(positive_bndboxes.shape) == 1 and len(positive_bndboxes) != 0:
             scores = metrics.iou(positive_bndboxes, bndboxs)
