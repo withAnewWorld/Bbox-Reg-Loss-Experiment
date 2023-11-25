@@ -1,0 +1,8 @@
+name: boundingbox-regression-loss-experiment-project
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - pip-tools
